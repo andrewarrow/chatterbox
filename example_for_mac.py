@@ -3,6 +3,7 @@ import torchaudio as ta
 import os
 import random
 import argparse
+import librosa
 from chatterbox.tts import ChatterboxTTS
 
 # Detect device (Mac with M1/M2/M3/M4)
@@ -16,6 +17,23 @@ def patched_torch_load(*args, **kwargs):
     return torch_load_original(*args, **kwargs)
 
 torch.load = patched_torch_load
+
+def adjust_audio_speed(wav_tensor, speed_factor, sample_rate):
+    """
+    Adjust audio speed using librosa time stretching.
+    speed_factor: 1.0 = normal, 0.5 = 50% slower, 2.0 = 2x faster
+    """
+    if speed_factor == 1.0:
+        return wav_tensor
+    
+    # Convert tensor to numpy
+    wav_numpy = wav_tensor.squeeze().numpy()
+    
+    # Use librosa to stretch the audio
+    stretched_audio = librosa.effects.time_stretch(wav_numpy, rate=speed_factor)
+    
+    # Convert back to tensor with same shape as input
+    return torch.from_numpy(stretched_audio).unsqueeze(0)
 
 # Define emotional presets
 EMOTION_PRESETS = {
@@ -51,6 +69,8 @@ parser.add_argument('--output', '-o', type=str, default='test-2.wav',
                     help='Output filename')
 parser.add_argument('--render-all', '-r', type=str, metavar='VOICE', 
                     choices=voice_files, help='Render all emotions using specified voice as voice_emotion.wav')
+parser.add_argument('--speed', '-s', type=float, default=1.0,
+                    help='Speech speed multiplier (1.0 = normal, 0.5 = 50%% slower, 2.0 = 2x faster)')
 args = parser.parse_args()
 
 model = ChatterboxTTS.from_pretrained(device=device)
@@ -74,7 +94,7 @@ if args.render_all:
         print(f"Generating {emotion} emotion... ({output_filename})")
         
         # Use custom text format for render-all mode
-        render_text = f"hello this is {voice_name} and I am reading in {emotion} style voice."
+        render_text = f"the best part about being {voice_name} is that when I read in {emotion} style voice I can make the whole world stop and take notice. worcestershire sauce."
         
         wav = model.generate(
             render_text,
@@ -83,6 +103,10 @@ if args.render_all:
             cfg_weight=params["cfg_weight"],
             temperature=params["temperature"]
         )
+        
+        # Apply speed adjustment if needed
+        wav = adjust_audio_speed(wav, args.speed, model.sr)
+        
         ta.save(output_filename, wav, model.sr)
     
     print(f"\nCompleted! Generated {len(EMOTION_PRESETS)} files.")
@@ -100,6 +124,7 @@ else:
     
     print(f"Using voice: {selected_voice}")
     print(f"Emotion: {args.emotion}")
+    print(f"Speed: {args.speed}x")
     print(f"Parameters: {emotion_params}")
     
     wav = model.generate(
@@ -109,5 +134,9 @@ else:
         cfg_weight=emotion_params["cfg_weight"],
         temperature=emotion_params["temperature"]
         )
+    
+    # Apply speed adjustment if needed
+    wav = adjust_audio_speed(wav, args.speed, model.sr)
+    
     ta.save(args.output, wav, model.sr)
     print(f"Saved to: {args.output}")
