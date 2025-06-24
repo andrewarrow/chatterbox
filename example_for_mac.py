@@ -2,6 +2,7 @@ import torch
 import torchaudio as ta
 import os
 import random
+import argparse
 from chatterbox.tts import ChatterboxTTS
 
 # Detect device (Mac with M1/M2/M3/M4)
@@ -16,8 +17,31 @@ def patched_torch_load(*args, **kwargs):
 
 torch.load = patched_torch_load
 
+# Define emotional presets
+EMOTION_PRESETS = {
+    "normal": {"exaggeration": 1.0, "cfg_weight": 0.7, "temperature": 0.7},
+    "excited": {"exaggeration": 2.5, "cfg_weight": 0.3, "temperature": 0.9},
+    "sad": {"exaggeration": 0.5, "cfg_weight": 0.8, "temperature": 0.5},
+    "angry": {"exaggeration": 3.0, "cfg_weight": 0.2, "temperature": 1.0},
+    "calm": {"exaggeration": 0.3, "cfg_weight": 0.9, "temperature": 0.4},
+    "dramatic": {"exaggeration": 3.5, "cfg_weight": 0.1, "temperature": 1.1}
+}
+
+# Parse command line arguments
+parser = argparse.ArgumentParser(description='Generate speech with different emotional tones')
+parser.add_argument('--emotion', '-e', choices=list(EMOTION_PRESETS.keys()), 
+                    default='normal', help='Emotional tone for the speech')
+parser.add_argument('--text', '-t', type=str, 
+                    default="Today is the day. I want to move like a titan at dawn, sweat like a god forging lightning. No more excuses. From now on, my mornings will be temples of discipline. I am going to work out like the gods… every damn day.",
+                    help='Text to synthesize')
+parser.add_argument('--output', '-o', type=str, default='test-2.wav', 
+                    help='Output filename')
+args = parser.parse_args()
+
+# Get emotion parameters
+emotion_params = EMOTION_PRESETS[args.emotion]
+
 model = ChatterboxTTS.from_pretrained(device=device)
-text = "Today is the day. I want to move like a titan at dawn, sweat like a god forging lightning. No more excuses. From now on, my mornings will be temples of discipline. I am going to work out like the gods… every damn day."
 
 # Randomly select a voice from the voices directory
 voices_dir = "./voices"
@@ -26,11 +50,15 @@ random_voice = random.choice(voice_files)
 audio_prompt_path = os.path.join(voices_dir, random_voice)
 
 print(f"Using voice: {random_voice}")
+print(f"Emotion: {args.emotion}")
+print(f"Parameters: {emotion_params}")
 
 wav = model.generate(
-    text, 
+    args.text, 
     audio_prompt_path=audio_prompt_path,
-    exaggeration=2.0,
-    cfg_weight=0.5
+    exaggeration=emotion_params["exaggeration"],
+    cfg_weight=emotion_params["cfg_weight"],
+    temperature=emotion_params["temperature"]
     )
-ta.save("test-2.wav", wav, model.sr)
+ta.save(args.output, wav, model.sr)
+print(f"Saved to: {args.output}")
