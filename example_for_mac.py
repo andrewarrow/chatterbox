@@ -27,12 +27,18 @@ EMOTION_PRESETS = {
     "dramatic": {"exaggeration": 3.5, "cfg_weight": 0.1, "temperature": 1.1}
 }
 
+# Get available voices
+voices_dir = "./voices"
+voice_files = [f for f in os.listdir(voices_dir) if f.endswith('.wav')]
+
 # Parse command line arguments
 parser = argparse.ArgumentParser(description='Generate speech with different emotional tones')
 parser.add_argument('--emotion', '-e', choices=list(EMOTION_PRESETS.keys()), 
                     default='normal', help='Emotional tone for the speech')
+parser.add_argument('--voice', '-v', choices=voice_files + ['random'], 
+                    default='random', help='Voice to use for synthesis')
 parser.add_argument('--text', '-t', type=str, 
-                    default="Today is the day. I want to move like a titan at dawn, sweat like a god forging lightning. No more excuses. From now on, my mornings will be temples of discipline. I am going to work out like the gods… every damn day.",
+                    default="Today is the day. I want to move like a titan.",
                     help='Text to synthesize')
 parser.add_argument('--output', '-o', type=str, default='test-2.wav', 
                     help='Output filename')
@@ -43,13 +49,15 @@ emotion_params = EMOTION_PRESETS[args.emotion]
 
 model = ChatterboxTTS.from_pretrained(device=device)
 
-# Randomly select a voice from the voices directory
-voices_dir = "./voices"
-voice_files = [f for f in os.listdir(voices_dir) if f.endswith('.wav')]
-random_voice = random.choice(voice_files)
-audio_prompt_path = os.path.join(voices_dir, random_voice)
+# Select voice (random or specified)
+if args.voice == 'random':
+    selected_voice = random.choice(voice_files)
+else:
+    selected_voice = args.voice
 
-print(f"Using voice: {random_voice}")
+audio_prompt_path = os.path.join(voices_dir, selected_voice)
+
+print(f"Using voice: {selected_voice}")
 print(f"Emotion: {args.emotion}")
 print(f"Parameters: {emotion_params}")
 
