@@ -24,7 +24,16 @@ EMOTION_PRESETS = {
     "sad": {"exaggeration": 0.5, "cfg_weight": 0.8, "temperature": 0.5},
     "angry": {"exaggeration": 3.0, "cfg_weight": 0.2, "temperature": 1.0},
     "calm": {"exaggeration": 0.3, "cfg_weight": 0.9, "temperature": 0.4},
-    "dramatic": {"exaggeration": 3.5, "cfg_weight": 0.1, "temperature": 1.1}
+    "dramatic": {"exaggeration": 3.5, "cfg_weight": 0.1, "temperature": 1.1},
+    "whisper": {"exaggeration": 0.1, "cfg_weight": 0.95, "temperature": 0.3},
+    "mysterious": {"exaggeration": 1.5, "cfg_weight": 0.6, "temperature": 0.6},
+    "robotic": {"exaggeration": 0.2, "cfg_weight": 0.85, "temperature": 0.2},
+    "dreamy": {"exaggeration": 0.8, "cfg_weight": 0.75, "temperature": 0.8},
+    "villain": {"exaggeration": 2.8, "cfg_weight": 0.25, "temperature": 0.95},
+    "childlike": {"exaggeration": 2.2, "cfg_weight": 0.4, "temperature": 1.0},
+    "seductive": {"exaggeration": 1.8, "cfg_weight": 0.5, "temperature": 0.85},
+    "authoritative": {"exaggeration": 1.2, "cfg_weight": 0.8, "temperature": 0.6},
+    "maniacal": {"exaggeration": 4.0, "cfg_weight": 0.05, "temperature": 1.2}
 }
 
 # Get available voices
