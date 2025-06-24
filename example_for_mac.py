@@ -51,31 +51,57 @@ parser.add_argument('--text', '-t', type=str,
                     help='Text to synthesize')
 parser.add_argument('--output', '-o', type=str, default='test-2.wav', 
                     help='Output filename')
+parser.add_argument('--render-all', '-r', type=str, metavar='VOICE', 
+                    choices=voice_files, help='Render all emotions using specified voice as voice_emotion.wav')
 args = parser.parse_args()
-
-# Get emotion parameters
-emotion_params = EMOTION_PRESETS[args.emotion]
 
 model = ChatterboxTTS.from_pretrained(device=device)
 
-# Select voice (random or specified)
-if args.voice == 'random':
-    selected_voice = random.choice(voice_files)
+# Check if render-all mode
+if args.render_all:
+    voice_name = args.render_all.replace('.wav', '')
+    audio_prompt_path = os.path.join(voices_dir, args.render_all)
+    
+    print(f"Rendering all emotions using voice: {args.render_all}")
+    print(f"Text: {args.text}")
+    print()
+    
+    for emotion, params in EMOTION_PRESETS.items():
+        output_filename = f"{voice_name}_{emotion}.wav"
+        print(f"Generating {emotion} emotion... ({output_filename})")
+        
+        wav = model.generate(
+            args.text,
+            audio_prompt_path=audio_prompt_path,
+            exaggeration=params["exaggeration"],
+            cfg_weight=params["cfg_weight"],
+            temperature=params["temperature"]
+        )
+        ta.save(output_filename, wav, model.sr)
+    
+    print(f"\nCompleted! Generated {len(EMOTION_PRESETS)} files.")
 else:
-    selected_voice = args.voice
-
-audio_prompt_path = os.path.join(voices_dir, selected_voice)
-
-print(f"Using voice: {selected_voice}")
-print(f"Emotion: {args.emotion}")
-print(f"Parameters: {emotion_params}")
-
-wav = model.generate(
-    args.text, 
-    audio_prompt_path=audio_prompt_path,
-    exaggeration=emotion_params["exaggeration"],
-    cfg_weight=emotion_params["cfg_weight"],
-    temperature=emotion_params["temperature"]
-    )
-ta.save(args.output, wav, model.sr)
-print(f"Saved to: {args.output}")
+    # Single emotion mode
+    emotion_params = EMOTION_PRESETS[args.emotion]
+    
+    # Select voice (random or specified)
+    if args.voice == 'random':
+        selected_voice = random.choice(voice_files)
+    else:
+        selected_voice = args.voice
+    
+    audio_prompt_path = os.path.join(voices_dir, selected_voice)
+    
+    print(f"Using voice: {selected_voice}")
+    print(f"Emotion: {args.emotion}")
+    print(f"Parameters: {emotion_params}")
+    
+    wav = model.generate(
+        args.text, 
+        audio_prompt_path=audio_prompt_path,
+        exaggeration=emotion_params["exaggeration"],
+        cfg_weight=emotion_params["cfg_weight"],
+        temperature=emotion_params["temperature"]
+        )
+    ta.save(args.output, wav, model.sr)
+    print(f"Saved to: {args.output}")
