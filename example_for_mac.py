@@ -60,12 +60,17 @@ if args.render_all:
     voice_name = args.render_all.replace('.wav', '')
     audio_prompt_path = os.path.join(voices_dir, args.render_all)
     
+    # Create output directory for this voice
+    output_dir = voice_name
+    os.makedirs(output_dir, exist_ok=True)
+    
     print(f"Rendering all emotions using voice: {args.render_all}")
     print(f"Text format: hello this is {voice_name} and I am reading in [emotion] style voice.")
+    print(f"Output directory: {output_dir}/")
     print()
     
     for emotion, params in EMOTION_PRESETS.items():
-        output_filename = f"{voice_name}_{emotion}.wav"
+        output_filename = os.path.join(output_dir, f"{emotion}.wav")
         print(f"Generating {emotion} emotion... ({output_filename})")
         
         # Use custom text format for render-all mode
