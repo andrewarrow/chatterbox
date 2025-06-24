@@ -61,15 +61,18 @@ if args.render_all:
     audio_prompt_path = os.path.join(voices_dir, args.render_all)
     
     print(f"Rendering all emotions using voice: {args.render_all}")
-    print(f"Text: {args.text}")
+    print(f"Text format: hello this is {voice_name} and I am reading in [emotion] style voice.")
     print()
     
     for emotion, params in EMOTION_PRESETS.items():
         output_filename = f"{voice_name}_{emotion}.wav"
         print(f"Generating {emotion} emotion... ({output_filename})")
         
+        # Use custom text format for render-all mode
+        render_text = f"hello this is {voice_name} and I am reading in {emotion} style voice."
+        
         wav = model.generate(
-            args.text,
+            render_text,
             audio_prompt_path=audio_prompt_path,
             exaggeration=params["exaggeration"],
             cfg_weight=params["cfg_weight"],
